@@ -3,10 +3,13 @@
 This software implements the Robust Mean-Shift algoritm. Code is written in CUDA.
 
 # Requirements
-- CUDA SDK
+- CUDA SDK (optional, recommended)
+- OpenMP (if CUDA not provided, recommended)
 - libpng
 
 # Installation
+You can define in Makefile if you will use the CUDA framework or not, by default yes, when not remove the CUDA variable in Makefile
+
 Run:
 
 ```

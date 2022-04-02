@@ -1,10 +1,7 @@
-#ifndef CUDA
-
 /** 
  * @file filter_ms_rlsf.c
  * Routines for RObust Mean-Shift filtering of a color image
  */
-#include "cuda_runtime.h"
 #include "image.h"
 
 /** 
@@ -21,6 +18,8 @@
  * @author Kusnik Damian 
  * @date 16.01.2020
  */
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 float compute_weight_ms_rlsf(int* in_data, int width, float r, float g, float b, int pos, int alpha, float sigma, float* central_pix) {
 	float w, weights[9], r1, g1, b1;
@@ -65,14 +64,14 @@ float compute_weight_ms_rlsf(int* in_data, int width, float r, float g, float b,
 		weights[tmp] = +INFINITY;
 	}
 	w /= (float)(alpha);
-	w = __expf(-(w / sigma));
+	w = expf(-(w / sigma));
 	return w;
 }
 
-void denoise_pixel_rlsf(int* in_data, int* out_data, const int width, const int height, const int radius, const int alpha, const float sigma, const int iter, int ic, int ir)
+void denoise_pixel_rlsf(int* in_data, int* out_data, const int width, const int height, const int radius, const int alpha, const float sigma, const int iter, float ic, float ir)
 {
 	int f = 1;
-	float wsum = 0.0, w, mx, my,r,g,b, last_ir, last_ic, ic, ir, last_r, last_g, last_b;
+	float wsum = 0.0, w, mx, my,r,g,b, last_ir, last_ic, last_r, last_g, last_b;
 	int iter_count = 0;
 
 	if (ic >= width-f || ir >= height-f || ic < f || ir <f )
@@ -96,10 +95,10 @@ void denoise_pixel_rlsf(int* in_data, int* out_data, const int width, const int 
 	// go through all pixels in block
 	do {
 
-		int istart = max((int)round(ir) - radius-1, 1);
-		int iend = min((int)round(ir) + radius + 1, height - 2);
-		int jstart = max((int)round(ic) - radius-1, 1);
-		int jend = min((int)round(ic) + radius+1, width - 2);
+		int istart = MAX((int)round(ir) - radius-1, 1);
+		int iend = MIN((int)round(ir) + radius + 1, height - 2);
+		int jstart = MAX((int)round(ic) - radius-1, 1);
+		int jend = MIN((int)round(ic) + radius+1, width - 2);
 		
 		wsum = w = 0.0;
 		last_ir = ir;
@@ -161,7 +160,7 @@ void denoise_pixel_rlsf(int* in_data, int* out_data, const int width, const int 
 }
 
 Image *
-CUDA_filter_ms_rlsf ( const Image * in_img, const int r, int alpha, const float sigma, const int iter)
+filter_ms_rlsf ( const Image * in_img, const int r, int alpha, const float sigma, const int iter)
 {
  SET_FUNC_NAME ( "filter_ms" );
  //double elapsed_time;
@@ -220,9 +219,14 @@ CUDA_filter_ms_rlsf ( const Image * in_img, const int r, int alpha, const float 
 	 for (int j = 0; j < num_cols; j++)
 		int_in_data[i * num_cols + j] = (((int)in_data[i][j][0]) << 16) | ((int)in_data[i][j][1] << 8) | ((int)in_data[i][j][2]);
 
+ #pragma omp parallel \
+    shared(int_in_data, int_out_data)
+ {
+#pragma omp for schedule(dynamic) nowait
  for (int ir = 0; ir < num_rows; ir++) 
  	 for (int ic = 0; ic < num_cols; ic++)
-  	 denoise_pixel_rlsf(in_data, int_out_data, num_cols, num_rows, r, alpha, 2 * sigma * sigma, iter, ic, ir);
+  	 denoise_pixel_rlsf(int_in_data, int_out_data, num_cols, num_rows, r, alpha, 2 * sigma * sigma, iter, ic, ir);
+ }
 
  for (int i = 0; i < num_rows; i++)
 	 for (int j = 0; j < num_cols; j++)
@@ -239,4 +243,3 @@ CUDA_filter_ms_rlsf ( const Image * in_img, const int r, int alpha, const float 
 
  return out_img;
 }
-#endif

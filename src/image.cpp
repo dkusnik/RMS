@@ -1816,6 +1816,7 @@ Image* dt(byte** in_img_data, int width, int height, int on) {
  */
 
 
+#ifdef CUDA
 double
 calculate_prat(const Image* ref_img, const Image* test_img)
 {
@@ -1894,3 +1895,5 @@ calculate_prat(const Image* ref_img, const Image* test_img)
 		return result / count_ref;
 	return result / count_test;
 }
+
+#endif

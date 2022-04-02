@@ -1,4 +1,4 @@
-
+#ifdef CUDA
 /** 
  * @file edge_detection.cu
  * Routines for VR edge detection
@@ -197,4 +197,4 @@ detect_edge_VR ( const Image * in_img, const int threshold)
 
  return out_img;
 }
-
+#endif
