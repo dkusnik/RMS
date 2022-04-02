@@ -8,13 +8,13 @@ This software implements the Robust Mean-Shift algoritm. Code is written in CUDA
 - libpng
 
 # Installation
-You can define in Makefile if you will use the CUDA framework or not, by default yes, when not remove the CUDA variable in Makefile
+You can define in Makefile if you will use the CUDA framework or not, by default no. To use the CUDA framework add `CUDA=1` to make command
 
 Run:
 
 ```
-make lib
-make main
+make lib CUDA=1
+make main CUDA=1
 ```
 
 # Usage
@@ -32,6 +32,8 @@ iter - number of iteration for limiting of fliter execution
 # Acknowledgment
 
 This code uses parts of the Fourier 0.8 library by Emre Celebi licensed on GPL avalaible here:
+
 http://sourceforge.net/projects/fourier-ipal
+
 http://www.lsus.edu/faculty/~ecelebi/fourier.htm
 
